@@ -124,6 +124,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.venv*
 env/
 venv/
 ENV/
@@ -164,6 +165,7 @@ cython_debug/
 # data
 *.parquet
 *.pickle
+*.pkl
 
-# project environment
-env_recsys_start/
+# Catboost files
+catboost_info/
