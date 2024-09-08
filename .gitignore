@@ -172,7 +172,3 @@ catboost_info/
 
 # Ignoring files except for these
 !test_service.log
-!data/recommendations.parquet
-!data/top_popular.parquet
-!data/similar.parquet
-!data/items.parquet
