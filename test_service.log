@@ -1,0 +1,7 @@
+INFO:test_service_log:No personal/no online - {'user_id': 5, 'k': 5} => {'recs': [53404, 33311009, 178529, 35505245, 24692821]}
+INFO:test_service_log:No personal/no online - {'user_id': 1, 'k': 5} => {'recs': [53404, 33311009, 178529, 35505245, 24692821]}
+INFO:test_service_log:Personal/no online{'user_id': 28073, 'k': 5} => {'recs': [58515506, 72055319, 63591534, 33308946, 43526313]}
+INFO:test_service_log:{'events': [8449, 109123, 1168, 3911]}
+INFO:test_service_log:Offline - {'user_id': 54633, 'k': 5} => {'recs': [35505245, 38572747, 78194999, 41883693, 43526313]}
+INFO:test_service_log:Online - {'user_id': 54633, 'k': 5} => {'recs': [65760936, 24321869, 6696282, 23826813, 50995541]}
+INFO:test_service_log:Blended - {'user_id': 54633, 'k': 5} => {'recs': [65760936, 35505245, 24321869, 38572747, 6696282]}
