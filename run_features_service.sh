@@ -1,0 +1,1 @@
+uvicorn service.features_service:app --port 8003

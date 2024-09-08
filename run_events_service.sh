@@ -1,0 +1,1 @@
+uvicorn service.events_service:app --port 8002

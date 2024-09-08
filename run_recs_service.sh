@@ -1,0 +1,1 @@
+uvicorn service.recs_offline_service:app --port 8001
