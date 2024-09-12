@@ -1,0 +1,8 @@
+BASE_URL = "http://127.0.0.1"
+MAIN_APP_PORT = 8000
+RECS_OFFLINE_SERVICE_PORT = 8001
+EVENTS_SERVICE_PORT = 8002
+FEATURES_SERVICE_PORT = 8003
+PERSONAL_RECS_PATH = "data/recommendations.parquet"
+DEFAULT_RECS_PATH = "data/top_popular.parquet"
+ONLINE_RECS_PATH = "data/similar.parquet"

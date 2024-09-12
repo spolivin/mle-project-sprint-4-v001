@@ -1,11 +1,19 @@
 """Main application: launching different recommendation services."""
 import requests
+from requests.exceptions import ConnectionError
 from fastapi import FastAPI
 
+from .constants import (
+    BASE_URL, 
+    RECS_OFFLINE_SERVICE_PORT,
+    EVENTS_SERVICE_PORT,
+    FEATURES_SERVICE_PORT,
+)
+
 headers={'Content-type': 'application/json', 'Accept': 'text/plain'}
-recommendations_url = "http://127.0.0.1:8001"
-events_url = "http://127.0.0.1:8002"
-features_url = "http://127.0.0.1:8003"
+recommendations_url = BASE_URL + ":" + str(RECS_OFFLINE_SERVICE_PORT)
+events_url = BASE_URL + ":" + str(EVENTS_SERVICE_PORT)
+features_url = BASE_URL + ":" + str(FEATURES_SERVICE_PORT)
 
 # Creating an app
 app = FastAPI(title="recommendations_main")
@@ -16,6 +24,25 @@ def dedup_ids(ids):
     ids = [id for id in ids if not (id in seen or seen.add(id))]
 
     return ids
+
+
+@app.get("/stats")
+async def stats():
+    response = requests.get(recommendations_url + "/get_stats")
+    return response.json()
+
+@app.get("/healthy")
+async def healthy():
+    """Displays status message."""
+    # Verifying connection to all services
+    try:
+        response = requests.get(recommendations_url + "/healthy")
+        response = requests.get(events_url + "/healthy")
+        response = requests.get(features_url + "/healthy")
+    except ConnectionError:
+        return {"status": "unhealthy"}
+    else:
+        return {"status": "healthy"}
 
 @app.post("/recommendations_offline")
 async def recommendations_offline(user_id: int, k: int = 5):

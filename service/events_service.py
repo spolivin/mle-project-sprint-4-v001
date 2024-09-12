@@ -17,10 +17,7 @@ class EventStore():
 
     def get(self, user_id: int, k: int = 5):
         """Retrieves online history."""
-        try:
-            user_events = self.events[user_id][:k]
-        except KeyError:
-            user_events = []
+        user_events = self.events[user_id][:k] if user_id in self.events else []
 
         return user_events
     
@@ -30,6 +27,14 @@ event_store = EventStore()
 
 # Creating an app
 app = FastAPI(title="events")
+
+@app.get("/healthy")
+async def healthy():
+    """Displays status message."""
+    return {
+        "status": "healthy"
+    }
+
 # Integrating endpoints for the service
 @app.post("/put")
 async def put(user_id: int, track_id: int):

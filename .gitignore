@@ -169,6 +169,3 @@ cython_debug/
 
 # Catboost files
 catboost_info/
-
-# Ignoring files except for these
-!test_service.log

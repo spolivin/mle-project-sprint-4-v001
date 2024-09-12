@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 import pandas as pd
 from fastapi import FastAPI, Request
 
+from .constants import ONLINE_RECS_PATH
+
 # Setting up a logger with uvicorn output stream
 logger = logging.getLogger("uvicorn.error")
 logging.basicConfig(level=logging.INFO)
@@ -39,7 +41,7 @@ class SimilarTracks():
 async def lifespan(app: FastAPI):
     """Loads data on application start-up."""
     sim_items_store = SimilarTracks()
-    sim_items_store.load(path="data/similar.parquet")
+    sim_items_store.load(path=ONLINE_RECS_PATH)
     logger.info("Ready for online recommendations")
 
     yield {"sim_items_store": sim_items_store}
@@ -47,6 +49,13 @@ async def lifespan(app: FastAPI):
 
 # Creating an app
 app = FastAPI(title="features", lifespan=lifespan)
+
+@app.get("/healthy")
+async def healthy():
+    """Displays status message."""
+    return {
+        "status": "healthy"
+    }
 
 # Adding an endpoint for online recommendations
 @app.post("/similar_tracks")

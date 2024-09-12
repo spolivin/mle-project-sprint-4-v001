@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 import pandas as pd
 from fastapi import FastAPI, Request
 
+from .constants import PERSONAL_RECS_PATH, DEFAULT_RECS_PATH
+
 # Setting up a logger with uvicorn output stream
 logger = logging.getLogger("uvicorn.error")
 logging.basicConfig(level=logging.INFO)
@@ -26,51 +28,38 @@ class Recommender():
             "request_default_count": 0,
         }
 
-    def load(self, type, path, **kwargs):
+    def load(self, rec_type, path, **kwargs):
         """Loads offline recommendations."""
-        logger.info(f"Loading recommendations: {type}")
-        self._recs[type] = pd.read_parquet(path, **kwargs)
-        if type == "personal":
-            self._recs[type] = self._recs[type].set_index("user_id")
+        logger.info(f"Loading recommendations: {rec_type}")
+        self._recs[rec_type] = pd.read_parquet(path, **kwargs)
+        if rec_type == "personal":
+            self._recs[rec_type] = self._recs[rec_type].set_index("user_id")
         logger.info("Recommendations loaded")
 
     def get(self, user_id: int, k: int = 10):
         """Generates k offline recommendations for user."""
-        try:
+        if user_id in self._recs["personal"].index:
             recs = self._recs["personal"].loc[user_id]
             recs = recs["track_id"].tolist()[:k]
             self._stats["request_personal_count"] += 1
             logger.info(f"user {user_id} - using personal history")
-        except KeyError:
+        else:
             recs = self._recs["default"]
             recs = recs["track_id"].tolist()[:k]
             self._stats["request_default_count"] += 1
             logger.info(f"user {user_id} - using default")
-        except:
-            logger.error("No recommendations found")
-            recs = []
 
         return recs
-    
-    def stats(self) -> None:
-        """Logs service statistics."""
-        logger.info("Stats for recommendations")
-
-        for name, value in self._stats.items():
-            logger.info(f"{name:<30} {value}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Loads data on application start-up."""
     rec_store = Recommender()
-    rec_store.load(type="personal", path="data/recommendations.parquet")
-    rec_store.load(type="default", path="data/top_popular.parquet")
+    rec_store.load(rec_type="personal", path=PERSONAL_RECS_PATH)
+    rec_store.load(rec_type="default", path=DEFAULT_RECS_PATH)
 
     yield {"rec_store": rec_store}
-
-    rec_store.stats()
-
 
 # Creating an app
 app = FastAPI(title="recommendations_offline", lifespan=lifespan)
@@ -84,3 +73,17 @@ async def recommendations(request: Request, user_id: int, k: int):
     i2i = rec_store.get(user_id, k)
 
     return i2i
+
+@app.get("/healthy")
+async def healthy():
+    """Displays status message."""
+    return {
+        "status": "healthy"
+    }
+
+@app.get("/get_stats")
+async def get_stats(request: Request):
+    """Displays service statistics."""
+    rec_store = request.state.rec_store
+
+    return rec_store._stats
