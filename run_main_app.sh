@@ -1,1 +1,0 @@
-uvicorn service.recommendations_service:app --port 8000
