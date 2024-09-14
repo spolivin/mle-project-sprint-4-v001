@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "-s",
     "--service-name",
-    help="Service name to run." + HELP_MSG,
+    help="Service name to run. " + HELP_MSG,
 )
 args = parser.parse_args()
 
