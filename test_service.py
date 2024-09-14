@@ -1,4 +1,5 @@
 """Tests the recommendations service."""
+import logging
 import unittest
 
 import requests
@@ -14,10 +15,25 @@ headers={'Content-type': 'application/json', 'Accept': 'text/plain'}
 main_app_url = BASE_URL + ":" + str(MAIN_APP_PORT)
 events_url = BASE_URL + ":" + str(EVENTS_SERVICE_PORT)
 
+logger = logging.getLogger("unittest_logger")
+logger.setLevel(logging.DEBUG)
+
+file_handler = logging.FileHandler("test_service.log")
+file_handler.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+
+def get_server_info(response):
+    logger.info(f">>> Request: url='{response.request.url}', method='{response.request.method}'")
+    logger.info(f"<<< Response: status_code='{response.status_code}', data='{response.text}'")
 
 def send_test_request(params, url, endpoint, headers=headers):
     """Sends a test request to a url/endpoint."""
     resp = requests.post(url + endpoint, headers=headers, params=params)
+    get_server_info(response=resp)
     if resp.status_code == 200:
         recs = resp.json()
     else:
@@ -26,51 +42,64 @@ def send_test_request(params, url, endpoint, headers=headers):
     
     return recs
 
+
 class TestRecommendationsService(unittest.TestCase):
     """Class for testing a recommendation service."""
 
     def test_connection(self):
         """Tests connection to all services comprising the application."""
+        logger.info('Test 1: "Healthcheck status"')
         response = requests.get(main_app_url + "/healthy")
+        get_server_info(response=response)
         response = response.json()
         response = response["status"]
-        
+
         self.assertEqual(response, "healthy")
+        logger.info("Test 1 PASS")
 
     def test_default_users(self, user_id_1: int = 5, user_id_2: int = 1):
         """Tests recs for users without personal recs / online history."""
         # Getting recommendations for user_id=5
-        params_user_5 = {"user_id": user_id_1}
+        logger.info("-" * 69)
+        logger.info('Test 2: "Default users check"')
+        params_user_5 = {"user_id": user_id_1, "k": 5}
         response_user_5 = send_test_request(
             params=params_user_5, url=main_app_url, endpoint="/recommendations",
         )
         # Getting recommendations for user_id=1
-        params_user_1 = {"user_id": user_id_2}
+        params_user_1 = {"user_id": user_id_2, "k": 5}
         response_user_1 = send_test_request(
             params=params_user_1, url=main_app_url, endpoint="/recommendations",
         )
 
         self.assertEqual(response_user_5["recs"], response_user_1["recs"])
+        logger.info("Test 2 PASS")
 
     def test_no_empty_recs_1(self, user_id: int = 28073):
         """Tests the non-emptiness of recommendations (user with personal recs)."""
-        params = {"user_id": user_id}
+        logger.info("-" * 69)
+        logger.info('Test 3: "User with personal recs check"')
+        params = {"user_id": user_id, "k": 5}
         response = send_test_request(
             params=params, url=main_app_url, endpoint="/recommendations",
         )
 
         self.assertIsInstance(response["recs"], list)
         self.assertNotEqual(response["recs"], [])
+        logger.info("Test 3 PASS")
 
     def test_no_empty_recs_2(self, user_id: int = 1):
         """Tests the non-emptiness of recommendations (user without personal recs)."""
-        params = {"user_id": user_id}
+        logger.info("-" * 69)
+        logger.info('Test 4: "User without personal recs check"')
+        params = {"user_id": user_id, "k": 5}
         response = send_test_request(
             params=params, url=main_app_url, endpoint="/recommendations",
         )
 
         self.assertIsInstance(response["recs"], list)
         self.assertNotEqual(response["recs"], [])
+        logger.info("Test 4 PASS")
 
     def test_online_history(
             self, 
@@ -78,22 +107,28 @@ class TestRecommendationsService(unittest.TestCase):
             events: list = [3911, 1168, 109123, 8449],
         ):
         """Tests if the online history is added upon request."""
+        logger.info("-" * 69)
+        logger.info('Test 5: "Online events test"')
         for track_id in events:
-            response = requests.post(
-                events_url + "/put", 
-                params={"user_id": user_id, "track_id": track_id}
+            response = send_test_request(
+                url=events_url,
+                endpoint="/put",
+                params={"user_id": user_id, "track_id": track_id},
             )
         online_history = send_test_request(
-            params={"user_id": user_id, "k": 100},
+            params={"user_id": user_id, "k": 10},
             url=events_url,
             endpoint="/get",
         )
 
         self.assertIsInstance(online_history["events"], list)
         self.assertNotEqual(online_history["events"], [])
+        logger.info("Test 5 PASS")
 
     def test_online_recommendations(self, user_id: int = 54633):
         """Tests if user with online history gets non-empty recommendations."""
+        logger.info("-" * 69)
+        logger.info('Test 6: "User with online events check"')
         params = {"user_id": user_id}
         response = send_test_request(
             params=params, url=main_app_url, endpoint="/recommendations_online",
@@ -101,11 +136,15 @@ class TestRecommendationsService(unittest.TestCase):
 
         self.assertIsInstance(response["recs"], list)
         self.assertNotEqual(response["recs"], [])
+        logger.info("Test 6 PASS")
 
     def test_service_stats(self):
         """Tests if service statistics are changing after requests."""
         # Requesting stats
+        logger.info("-" * 69)
+        logger.info('Test 7: "Stats check"')
         response = requests.get(main_app_url + "/stats")
+        get_server_info(response=response)
         response = response.json()
         # Separating stats
         response_default_stats = response["request_default_count"]
@@ -113,6 +152,7 @@ class TestRecommendationsService(unittest.TestCase):
         
         self.assertGreater(response_default_stats, 0)
         self.assertGreater(response_personal_stats, 0)
+        logger.info("Test 7 PASS")
 
 if __name__ == "__main__":
     unittest.main()
