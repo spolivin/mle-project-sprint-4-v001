@@ -38,7 +38,17 @@ unittest_logger: INFO     >>> Request: url='http://127.0.0.1:8000/recommendation
 unittest_logger: INFO     <<< Response: status_code='200', data='{"recs":[65760936,24321869,6696282,23826813,50995541]}'
 unittest_logger: INFO     Test 6 PASS
 unittest_logger: INFO     ---------------------------------------------------------------------
-unittest_logger: INFO     Test 7: "Stats check"
-unittest_logger: INFO     >>> Request: url='http://127.0.0.1:8000/stats', method='GET'
-unittest_logger: INFO     <<< Response: status_code='200', data='{"request_personal_count":1,"request_default_count":3}'
+unittest_logger: INFO     Test 7: "Offline recs check"
+unittest_logger: INFO     >>> Request: url='http://127.0.0.1:8000/recommendations_offline?user_id=54633&k=5', method='POST'
+unittest_logger: INFO     <<< Response: status_code='200', data='{"recs":[35505245,38572747,78194999,41883693,43526313]}'
 unittest_logger: INFO     Test 7 PASS
+unittest_logger: INFO     ---------------------------------------------------------------------
+unittest_logger: INFO     Test 8: "Blended recommendations check"
+unittest_logger: INFO     >>> Request: url='http://127.0.0.1:8000/recommendations?user_id=54633&k=5', method='POST'
+unittest_logger: INFO     <<< Response: status_code='200', data='{"recs":[65760936,35505245,24321869,38572747,6696282]}'
+unittest_logger: INFO     Test 8 PASS
+unittest_logger: INFO     ---------------------------------------------------------------------
+unittest_logger: INFO     Test 9: "Stats check"
+unittest_logger: INFO     >>> Request: url='http://127.0.0.1:8000/stats', method='GET'
+unittest_logger: INFO     <<< Response: status_code='200', data='{"request_personal_count":3,"request_default_count":3}'
+unittest_logger: INFO     Test 9 PASS
