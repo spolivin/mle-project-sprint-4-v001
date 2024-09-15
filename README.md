@@ -1,17 +1,30 @@
-# Система рекомендации музыкальных треков: создание и тестирование
+# Recommendation system of music tracks: building and testing
 
+## Cloning repository
 
-## Клонирование репозитория
-
-Для начала клонируем репозиторий проекта:
+Firsly, we need to clone the repository:
 
 ```
 git clone git@github.com:spolivin/mle-project-sprint-4-v001.git
 ```
 
-## Виртуальное окружение
+## Loading data
 
-Активируем окружение следующей серией команд:
+Files used during building the recommendation system are downloaded using the following commands:
+
+```bash
+wget https://storage.yandexcloud.net/mle-data/ym/tracks.parquet -P data
+
+wget https://storage.yandexcloud.net/mle-data/ym/catalog_names.parquet -P data
+
+wget https://storage.yandexcloud.net/mle-data/ym/interactions.parquet -P data
+```
+
+The entire process of building the recommendations can be consulted in [this notebook](./recommendations.ipynb).
+
+## Virtual environment
+
+We can activate the virtual environment using the following series of commands:
 
 ```bash
 sudo apt-get update
@@ -20,34 +33,31 @@ python3.10 -m venv .venv_recsys_app
 source .venv_recsys_app/bin/activate
 pip install --no-cache-dir -r requirements.txt
 ```
-> NOTE: При возникновении ошибок на этапе установки библиотек в вирутальную среду может быть необходимо установить другие необходимые пакеты для среды Ubuntu командой `sudo apt-get install build-essential`.
+> NOTE: Before installing the packages into the virtual environment, it might be necessary to firstly run `sudo apt-get install build-essential` to install additional packages to *Ubuntu* system.
 
-## Подготовка к запуску микросервиса
+## Preparation for launching a microservice
 
-Перед тем как запустить микросервис, необходимо сначала загрузить файлы с данными рекомендаций из *S3*. Файлы являются довольно тяжелыми, так что такой способ подготовки был выбран для избежания перегруженности репозитория без надобности.
+Before launching the services, it is essential to firstly load data files with recommendations from *S3* cloud storage. Data take up quite a lot of memory so this method was chosen to avoid overloading the repository with large files.
 
-Для загрузки всех необходимых для работы микросервиса файлов, можно запустить следующий скрипт:
+Loading all required files is pretty straightforward, all one need to do is run [this script](./s3_scripts/prepare_datasets.py) using the following command:
 
 ```bash
 python s3_scripts/prepare_datasets.py
 ```
 
-После выполнения скрипта все требуемые данные будут загружены в директорию `data`.
+After running the script all files are loaded to `data` folder by default.
 
+## Application launch
 
-Bucket name `s3-student-mle-20240523-34f645dbbf`
+Microservice is made up of 4 modules in `services`:
 
-## Запуск микросервиса
+* [`recommendations_service.py`](service/recommendations_service.py) => Main application which generates recommendations of all types 
+* [`events_service.py`](service/events_service.py) => Service for adding online events (musical tracks) to the online history of a user
+* [`features_service.py`](service/features_service.py) => Service for generating online recommendations based on musical tracks similarity
+* [`recs_offline_service.py`](service/recs_offline_service.py) => Service for generating offline recommendations
+* [`constants.py`](service/constants.py) => File with main constants used for the application functioning.
 
-Микросервис поделен на 4 модуля в папке `services`:
-
-* [`recommendations_service.py`](service/recommendations_service.py) => Основное приложение, из которого запускается генерация рекомендаций всех типов 
-* [`events_service.py`](service/events_service.py) => Сервис для добавления онлайн событий пользователю 
-* [`features_service.py`](service/features_service.py) => Сервис для расчета онлайн рекомендаций, основанных на схожести треков
-* [`recs_offline_service.py`](service/recs_offline_service.py) => Сервис для расчет офлайн рекомендаций
-* [`constants.py`](service/constants.py) => Файл с основными константами, необходимыми для работы приложения.
-
-Для запуска сервиса рекомендаций был подготовлен [единый скрипт](./run_service.py), который запускает каждый из приведенных выше сервисов по флагу `--service-name`: 
+Recommendation service can be launched using [main script](./run_service.py) which executes each of the aforementioned services by `--service-name` flag: 
 
 ```bash
 # Terminal window 1
@@ -66,21 +76,23 @@ python run_service.py --service-name=features_store
 python run_service.py --service-name=events_store
 ```
 
-После того как все сервисы успешно запустились (о чем будет свидетельствовать вывод в терминале об успешности запуска сервера), можно начать делать запросы к микросервису.
+After all services having been launched successfully (which will be shown in each terminal), requests to the application can be sent.
 
-## Тестирования микросервиса
+## Microservice testing
 
-Тестирование сервиса можно запустить при помощи следующей команды:
+Testing the application can be launched using the following command:
 
 ```python
 # Terminal window 5 (testing)
 python test_service.py
 ```
 
-## Стратегия смешивания рекомендаций
+The output of the testing process is automatically logged to [`test_service.log`](./test_service.log).
 
-Как можно видеть в [коде основного приложения](service/recommendations_service.py), при наличии онлайн истории запускается смешивание онлайн и оффлайн рекомендаций. В данном случае ставим онлайн-рекомендации на нечетные места финального списка рекомендаций, а оффлайн - на четные.
+## Strategy of blending recommendations
 
-## Остановка сервисов
+As can be seen in the [main application code](service/recommendations_service.py), provided that a user has an online history, the final recommendations for such a user are computed by mixing up online and offline recommendations where online ones are located on odd places, while offline recommendations - on even places.
 
-По окончании работы сервисы можно остановить через `Ctrl+C` в каждом терминальном окне.
+## Stopping the application
+
+After finishing working with the application, one needs to stop each of the 4 service by entering `Ctrl+C` in each of the respective terminal windows.
