@@ -38,25 +38,25 @@ if __name__ == "__main__":
     # Launching main application
     if args.service_name == OPTION_MAIN:
         uvicorn.run(
-            app=MAIN_APP, 
+            app=MAIN_APP,
             port=MAIN_APP_PORT,
         )
     # Launching offline recommendations service
     elif args.service_name == OPTION_RECS:
         uvicorn.run(
-            app=RECS_APP, 
+            app=RECS_APP,
             port=RECS_OFFLINE_SERVICE_PORT,
         )
     # Launching service for storing events
     elif args.service_name == OPTION_EVENTS:
         uvicorn.run(
-            app=EVENTS_APP, 
+            app=EVENTS_APP,
             port=EVENTS_SERVICE_PORT,
         )
     # Launching a service for online recommendations
     elif args.service_name == OPTION_FEATURES:
         uvicorn.run(
-            app=FEATURES_APP, 
+            app=FEATURES_APP,
             port=FEATURES_SERVICE_PORT,
         )
     # Processing 'no arguments' / 'invalid arguments' cases

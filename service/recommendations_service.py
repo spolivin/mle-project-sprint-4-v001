@@ -4,19 +4,20 @@ from requests.exceptions import ConnectionError
 from fastapi import FastAPI
 
 from .constants import (
-    BASE_URL, 
+    BASE_URL,
     RECS_OFFLINE_SERVICE_PORT,
     EVENTS_SERVICE_PORT,
     FEATURES_SERVICE_PORT,
 )
 
-headers={'Content-type': 'application/json', 'Accept': 'text/plain'}
+headers = {"Content-type": "application/json", "Accept": "text/plain"}
 recommendations_url = BASE_URL + ":" + str(RECS_OFFLINE_SERVICE_PORT)
 events_url = BASE_URL + ":" + str(EVENTS_SERVICE_PORT)
 features_url = BASE_URL + ":" + str(FEATURES_SERVICE_PORT)
 
 # Creating an app
 app = FastAPI(title="recommendations_main")
+
 
 def dedup_ids(ids):
     """Removes duplicates from a list."""
@@ -31,6 +32,7 @@ async def stats():
     response = requests.get(recommendations_url + "/get_stats")
     return response.json()
 
+
 @app.get("/healthy")
 async def healthy():
     """Displays status message."""
@@ -44,16 +46,18 @@ async def healthy():
     else:
         return {"status": "healthy"}
 
+
 @app.post("/recommendations_offline")
 async def recommendations_offline(user_id: int, k: int = 5):
     """Displays k offline recommendations."""
     params = {"user_id": user_id, "k": k}
     response = requests.post(
         recommendations_url + "/get_recs", params=params, headers=headers
-        )
+    )
     response = response.json()
 
     return {"recs": response}
+
 
 @app.post("/recommendations_online")
 async def recommendations_online(user_id: int, k: int = 5, num_events: int = 3):
@@ -84,6 +88,7 @@ async def recommendations_online(user_id: int, k: int = 5, num_events: int = 3):
 
     return {"recs": combined[:k]}
 
+
 @app.post("/recommendations")
 async def recommendations(user_id: int, k: int = 50):
     """Computes recommendations based on online/offline history."""
@@ -93,7 +98,7 @@ async def recommendations(user_id: int, k: int = 50):
     # Stopping if there is no online history
     if result_online["recs"] == []:
         return {"recs": result_offline["recs"]}
-    
+
     # Blending online and offline recommendations (if online history present)
     recs_online = result_online["recs"]
     recs_offline = result_offline["recs"]

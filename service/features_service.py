@@ -12,8 +12,9 @@ logger = logging.getLogger("uvicorn.error")
 logging.basicConfig(level=logging.INFO)
 
 
-class SimilarTracks():
+class SimilarTracks:
     """Class for displaying online recommendations."""
+
     def __init__(self) -> None:
         """Initializes a class instance."""
         self._similar_tracks = None
@@ -33,7 +34,7 @@ class SimilarTracks():
         except KeyError:
             logger.error("No recommendations found")
             i2i = {"track_id_2": [], "score": []}
-        
+
         return i2i
 
 
@@ -50,12 +51,12 @@ async def lifespan(app: FastAPI):
 # Creating an app
 app = FastAPI(title="features", lifespan=lifespan)
 
+
 @app.get("/healthy")
 async def healthy():
     """Displays status message."""
-    return {
-        "status": "healthy"
-    }
+    return {"status": "healthy"}
+
 
 # Adding an endpoint for online recommendations
 @app.post("/similar_tracks")
